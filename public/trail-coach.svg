@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="560" viewBox="0 0 420 560" fill="none">
+  <defs>
+    <linearGradient id="jersey" x1="120" y1="210" x2="302" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#35D5BE"/>
+      <stop offset=".48" stop-color="#148D88"/>
+      <stop offset="1" stop-color="#145354"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="175" y1="178" x2="270" y2="336" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE58B"/>
+      <stop offset="1" stop-color="#FF9B42"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="155" y1="82" x2="260" y2="202" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD19A"/>
+      <stop offset="1" stop-color="#C97751"/>
+    </linearGradient>
+    <linearGradient id="bat" x1="275" y1="32" x2="346" y2="317" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF0B7"/>
+      <stop offset=".62" stop-color="#D79B56"/>
+      <stop offset="1" stop-color="#8E593C"/>
+    </linearGradient>
+    <filter id="shadow" x="30" y="12" width="370" height="540" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="11"/>
+      <feOffset dy="12"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".34"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow" x="0" y="0" width="420" height="560" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <style>
+    .captain { transform-box: fill-box; transform-origin: center bottom; animation: captain-bounce 2.8s ease-in-out infinite; }
+    .swing-bat { transform-box: fill-box; transform-origin: 12% 83%; animation: bat-ready 2.8s ease-in-out infinite; }
+    .flying-scarf { transform-box: fill-box; transform-origin: left center; animation: scarf-flick 1.8s ease-in-out infinite; }
+    .spark { transform-box: fill-box; transform-origin: center; animation: spark-pop 1.5s ease-in-out infinite; }
+    .spark:nth-of-type(2n) { animation-delay: .45s; }
+    .spark:nth-of-type(3n) { animation-delay: .9s; }
+    @keyframes captain-bounce { 0%,100% { transform: translateY(0) rotate(0); } 45% { transform: translateY(-5px) rotate(-.6deg); } 58% { transform: translateY(-3px) rotate(.6deg); } }
+    @keyframes bat-ready { 0%,100% { transform: rotate(0); } 48% { transform: rotate(-3deg); } 63% { transform: rotate(2deg); } }
+    @keyframes scarf-flick { 0%,100% { transform: rotate(0) scaleX(1); } 50% { transform: rotate(-5deg) scaleX(1.05); } }
+    @keyframes spark-pop { 0%,100% { opacity: .4; transform: scale(.75) rotate(0); } 50% { opacity: 1; transform: scale(1.2) rotate(22deg); } }
+    @media (prefers-reduced-motion: reduce) { .captain,.swing-bat,.flying-scarf,.spark { animation: none; } }
+  </style>
+  <ellipse cx="204" cy="521" rx="118" ry="20" fill="#041812" fill-opacity=".42"/>
+  <g class="spark" filter="url(#glow)" fill="#FFE58B">
+    <path d="m81 178 5 13 13 5-13 5-5 13-5-13-13-5 13-5 5-13Z"/>
+  </g>
+  <g class="spark" filter="url(#glow)" fill="#7BFFE4">
+    <path d="m342 183 4 10 10 4-10 4-4 10-4-10-10-4 10-4 4-10Z"/>
+  </g>
+  <g class="spark" fill="#FFC56E">
+    <circle cx="87" cy="291" r="4"/><circle cx="326" cy="383" r="4"/><circle cx="326" cy="78" r="3"/>
+  </g>
+  <path d="M66 233c17-17 30-23 45-24M71 258c13-9 22-13 34-13M302 112l14-17" stroke="#B6F4D6" stroke-opacity=".62" stroke-width="4" stroke-linecap="round"/>
+  <g class="captain" filter="url(#shadow)">
+    <g class="swing-bat">
+      <path d="M279 80c-5-13 11-21 20-10 37 44 58 116 60 196 1 36-4 65-10 86l-25-3c7-41 8-97-2-148-8-43-24-87-43-121Z" fill="url(#bat)" stroke="#79533A" stroke-width="5"/>
+      <path d="m286 101 23-8M302 139l25-9M316 180l25-8M328 223l22-4M334 263l21 1M332 297l20 5" stroke="#83573B" stroke-opacity=".5" stroke-width="4" stroke-linecap="round"/>
+      <path d="m304 319 36 4-9 73-36-5 9-72Z" fill="#E9B969" stroke="#865839" stroke-width="4"/>
+      <path d="m302 332 34 4M300 344l34 4M298 356l34 4M297 368l33 4" stroke="#87523D" stroke-width="5"/>
+    </g>
+    <path d="m153 356-17 117c-2 17 10 30 27 32l23 3 35-112 13 115c2 15 16 24 31 22l21-3-7-150-126-24Z" fill="#183F49" stroke="#12353D" stroke-width="6"/>
+    <path d="m137 472-10 26c-4 11 3 23 15 25l47 5c8 1 14-7 11-14l-5-10-29-11-11-22-18 1ZM236 483l3 25c1 11 11 19 22 17l45-6c8-1 12-10 7-17l-8-10-29 1-20-17-20 7Z" fill="#102E34" stroke="#0C252B" stroke-width="5"/>
+    <path d="m132 493 58 7-1 12-58-6ZM244 500l58-8 2 12-58 9Z" fill="#F2BE64"/>
+    <path d="m131 214-34 47c-9 13-13 29-11 45l7 64c1 11 10 19 21 18 11-1 18-10 17-21l-2-52 40-48-38-53Z" fill="url(#skin)" stroke="#914E3D" stroke-width="5"/>
+    <path d="m252 210 37 50c9 12 13 27 12 42l-4 48c-1 10-9 18-19 18-11 0-19-9-18-20l1-37-44-44 35-57Z" fill="url(#skin)" stroke="#914E3D" stroke-width="5"/>
+    <path d="m100 350 31-4 7 28-28 15-15-16 5-23ZM261 348l34 5-1 23-29 11-11-18 7-21Z" fill="#F7C58F" stroke="#914E3D" stroke-width="4"/>
+    <path d="m145 195 58-19 54 28c21 11 35 32 37 56l10 103-45 36-122-14-9-119c-2-31 6-57 17-71Z" fill="url(#jersey)" stroke="#123F42" stroke-width="7"/>
+    <path d="m194 187 18 31 21-27 21 18-14 40-31 13-30-28 1-33 14-14Z" fill="#102F3B" stroke="#E8C36E" stroke-width="4"/>
+    <path d="m183 192 27 24 24-19 14 15-17 32-27-4-28-29 7-19Z" fill="url(#gold)"/>
+    <path d="m216 252 30 54-10 67M174 248l-13 95M254 288l17 57" stroke="#86FFDF" stroke-opacity=".6" stroke-width="5" stroke-linecap="round"/>
+    <path d="m151 307 91 5 2 25-92-4-1-26Z" fill="#FFAD55"/>
+    <path d="m160 335 78 4" stroke="#FFE5A0" stroke-width="3" stroke-opacity=".8"/>
+    <path d="m255 238 22 24 13-11 12 13-10 20-25 8-14-32 2-22Z" fill="#F3D077" stroke="#8F6546" stroke-width="4"/>
+    <path d="M166 107c0-36 24-61 57-61 34 0 58 24 56 60l-4 45c-3 30-26 52-55 52-28 0-50-22-53-50l-1-46Z" fill="url(#skin)" stroke="#784736" stroke-width="5"/>
+    <path d="M159 114c-8-42 12-75 47-86 37-12 75 10 82 44l-9 31-31-13-20-26-23 29-37 20-9 17-10-16 10-18Z" fill="#172C34" stroke="#10252D" stroke-width="6"/>
+    <path d="m162 94 32-24 23-29 34 31 32 10-4 17-37-9-24-22-20 31-28 17-8-22Z" fill="#3C6260"/>
+    <path d="m175 83 63-17 42 17-3 17-38-9-25-15-22 25-19 4 2-22Z" fill="#F4B453" stroke="#B46A45" stroke-width="4"/>
+    <path d="m179 126 23-5M226 121l22 4" stroke="#59392F" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="194" cy="137" rx="5" ry="7" fill="#172C34"/><ellipse cx="238" cy="138" rx="5" ry="7" fill="#172C34"/>
+    <circle cx="195" cy="135" r="1.7" fill="#FFF6DD"/><circle cx="239" cy="136" r="1.7" fill="#FFF6DD"/>
+    <path d="m212 136-5 23 11 2" stroke="#A85F45" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M195 169c12 11 28 11 41-1" stroke="#713C35" stroke-width="4" stroke-linecap="round"/>
+    <path d="M202 172c8 4 17 4 25 0" stroke="#FFF0D7" stroke-width="5" stroke-linecap="round"/>
+    <path d="m161 131-11-4 2 28 14 8M266 131l12-4-4 29-13 8" fill="#E7B283" stroke="#784736" stroke-width="4"/>
+    <path class="flying-scarf" d="m174 197-31 13-24-4 19 19-17 23 37-15 28 5-15-18 17-17-14-6Z" fill="url(#gold)" stroke="#9D633F" stroke-width="4"/>
+    <path d="m187 235-17 53 24 13 21-41" fill="#177F79" stroke="#115753" stroke-width="4"/>
+    <path d="m191 248-9 33" stroke="#C9FFF0" stroke-width="4" stroke-linecap="round"/>
+    <path d="m178 286 15 5-5 14-15-5 5-14Z" fill="#FFE38B"/>
+  </g>
+  <g class="spark" fill="#ECFFD1"><circle cx="115" cy="121" r="3"/><circle cx="314" cy="426" r="3"/></g>
+</svg>
