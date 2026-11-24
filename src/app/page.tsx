@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import type { User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 import type { LeaderboardRow, ProfileRow } from "@/lib/supabase/database.types";
@@ -333,13 +334,20 @@ export default function Home() {
   const [toast, setToast] = useState("");
   const [levelUp, setLevelUp] = useState<{ previous: number; current: number } | null>(null);
   const [coachSpeaking, setCoachSpeaking] = useState(false);
+  const [briefingExpanded, setBriefingExpanded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(!isSupabaseConfigured);
   const [authOpen, setAuthOpen] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const [cloudReadyFor, setCloudReadyFor] = useState<string | null>(null);
+  const [profileState, setProfileState] = useState<"idle" | "loading" | "username" | "ready" | "error">("idle");
+  const [profileRetry, setProfileRetry] = useState(0);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [usernameBusy, setUsernameBusy] = useState(false);
+  const [usernameMessage, setUsernameMessage] = useState("");
   const playerSnapshot = useRef(player);
   const [leaderboardRows, setLeaderboardRows] = useState<LeaderboardRow[]>([]);
   const [leaderboardLoaded, setLeaderboardLoaded] = useState(false);
@@ -349,6 +357,16 @@ export default function Home() {
   useEffect(() => {
     playerSnapshot.current = player;
   }, [player]);
+
+  useEffect(() => {
+    if (!challengeOpen && !authOpen && !rewardCelebration && !levelUp) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [challengeOpen, authOpen, rewardCelebration, levelUp]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -361,11 +379,21 @@ export default function Home() {
         setBanner("Unable to restore your account session. Try signing in again.");
       }
       setAuthUser(data.session?.user ?? null);
+      setAuthChecked(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthUser(session?.user ?? null);
+      const user = session?.user ?? null;
+      setAuthUser(user);
+      setAuthChecked(true);
       setCloudReadyFor(null);
+      setProfileState(user ? "loading" : "idle");
+      if (user) {
+        setAuthOpen(false);
+        setShowIntro(false);
+      } else {
+        setShowIntro(true);
+      }
     });
 
     return () => {
@@ -447,32 +475,28 @@ export default function Home() {
       if (!active) return;
       if (error) {
         console.error("Could not load the cloud profile.", error);
-        setBanner("Unable to load your cloud progress. Your local save is safe.");
+        setProfileState("error");
         return;
       }
 
       if (data) {
         setPlayer(playerFromProfile(data));
+        setCloudReadyFor(authUser.id);
+        setProfileState("ready");
+        setShowIntro(false);
       } else {
-        const { error: insertError } = await client
-          .from("profiles")
-          .insert(profileFromPlayer(authUser.id, playerSnapshot.current));
-        if (!active) return;
-        if (insertError) {
-          console.error("Could not create the cloud profile.", insertError);
-          setBanner("Unable to create your cloud profile. Your local save is safe.");
-          return;
-        }
+        setUsernameInput("");
+        setUsernameMessage("");
+        setProfileState("username");
+        setShowIntro(false);
       }
-
-      if (active) setCloudReadyFor(authUser.id);
     };
 
     void loadProfile();
     return () => {
       active = false;
     };
-  }, [ready, authUser]);
+  }, [ready, authUser, profileRetry]);
 
   useEffect(() => {
     if (!ready || !authUser || !supabase || cloudReadyFor !== authUser.id) return;
@@ -574,6 +598,11 @@ export default function Home() {
   const avatar = player.avatar;
 
   function beginAdventure() {
+    if (isSupabaseConfigured && !authUser) {
+      setAuthMessage("");
+      setAuthOpen(true);
+      return;
+    }
     try {
       window.localStorage.setItem(INTRO_KEY, "true");
       setShowIntro(false);
@@ -615,6 +644,7 @@ export default function Home() {
     setCampaignAttempt(targetLevel === currentLevel);
     setSelectedAnswer("");
     setAnswerResult("");
+    setBriefingExpanded(false);
     setChallengeOpen(true);
   }
 
@@ -764,6 +794,40 @@ export default function Home() {
       setAuthMessage("Unable to send a sign-in link. Check the email address and try again.");
     } finally {
       setAuthBusy(false);
+    }
+  }
+
+  async function saveUsername(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const username = usernameInput.trim();
+    if (username.length < 1 || username.length > 18) {
+      setUsernameMessage("Choose a name between 1 and 18 characters.");
+      return;
+    }
+    if (!supabase || !authUser) {
+      setUsernameMessage("Your account session expired. Sign in again to continue.");
+      return;
+    }
+
+    setUsernameBusy(true);
+    setUsernameMessage("");
+    const nextPlayer = { ...playerSnapshot.current, username };
+    try {
+      const { error } = await supabase.from("profiles").insert(profileFromPlayer(authUser.id, nextPlayer));
+      if (error) {
+        console.error("Could not save the new explorer profile.", error);
+        setUsernameMessage("Unable to save your name right now. Please try again.");
+        return;
+      }
+
+      setPlayer(nextPlayer);
+      setCloudReadyFor(authUser.id);
+      setProfileState("ready");
+    } catch (error) {
+      console.error("New explorer profile save failed.", error);
+      setUsernameMessage("Unable to save your name right now. Please try again.");
+    } finally {
+      setUsernameBusy(false);
     }
   }
 
@@ -937,11 +1001,86 @@ export default function Home() {
     );
   }
 
-  if (!ready) {
+  function renderAccountDialog() {
+    if (!authOpen) return null;
+    const required = isSupabaseConfigured && !authUser;
+
+    return (
+      <div className="account-backdrop" role="presentation" onClick={(event) => {
+        if (!required && event.target === event.currentTarget) setAuthOpen(false);
+      }}>
+        <section className="account-dialog" role="dialog" aria-modal="true" aria-labelledby="account-title">
+          {!required && <button className="account-close" aria-label="Close account dialog" onClick={() => setAuthOpen(false)}>×</button>}
+          <p className="eyebrow">{required ? "FIRST, YOUR EXPLORER ACCOUNT" : "YOUR PROGRESS, EVERYWHERE"}</p>
+          <h2 id="account-title">{authUser ? "Explorer account" : "Join the expedition."}</h2>
+          {authUser ? (
+            <>
+              <p className="account-copy">Signed in as <strong>{authUser.email ?? "Google account"}</strong>. Your progress syncs to your account when Supabase is configured.</p>
+              <button className="account-primary" onClick={signOut}>SIGN OUT</button>
+            </>
+          ) : (
+            <>
+              <p className="account-copy">{required ? "Sign in first. Then you’ll choose your explorer name before the game begins." : "Sign in to sync your trail progress and appear on the global leaderboard."}</p>
+              <button className="google-signin" onClick={signInWithGoogle} disabled={authBusy}><span aria-hidden="true">G</span>{authBusy ? "CONNECTING…" : "CONTINUE WITH GOOGLE"}</button>
+              <div className="account-divider"><span>OR USE EMAIL</span></div>
+              <form className="email-signin" onSubmit={(event) => { event.preventDefault(); void sendEmailSignIn(); }}>
+                <label htmlFor="account-email">Email address</label>
+                <input id="account-email" type="email" autoComplete="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} placeholder="you@example.com" required />
+                <button className="account-primary" type="submit" disabled={authBusy}>{authBusy ? "SENDING LINK…" : "EMAIL ME A SIGN-IN LINK"}</button>
+              </form>
+              {!isSupabaseConfigured && <p className="account-setup-note">Account sign-in will be ready after the Supabase project is connected.</p>}
+            </>
+          )}
+          {authMessage && <p className="account-message" role="status">{authMessage}</p>}
+        </section>
+      </div>
+    );
+  }
+
+  if (!ready || (isSupabaseConfigured && !authChecked)) {
     return <main className="loading-screen"><Brand /><div className="loading-orb"><span /></div><p>PREPARING YOUR NEXT ADVENTURE</p><div className="loading-track"><i /></div></main>;
   }
 
-  if (showIntro) {
+  if (isSupabaseConfigured && authUser && (profileState === "idle" || profileState === "loading")) {
+    return <main className="loading-screen"><Brand /><div className="loading-orb"><span /></div><p>RESTORING YOUR EXPEDITION</p><div className="loading-track"><i /></div></main>;
+  }
+
+  if (isSupabaseConfigured && authUser && profileState === "error") {
+    return (
+      <main className="onboarding-screen">
+        <div className="onboarding-card">
+          <Brand />
+          <p className="eyebrow">YOUR TRAIL IS STILL HERE</p>
+          <h1>Unable to load your profile.</h1>
+          <p className="account-copy">Your progress is safe. Check your connection, then try again.</p>
+          <button className="account-primary" onClick={() => { setProfileState("loading"); setProfileRetry((attempt) => attempt + 1); }}>TRY AGAIN</button>
+          <button className="onboarding-signout" onClick={signOut}>SIGN OUT</button>
+        </div>
+      </main>
+    );
+  }
+
+  if (isSupabaseConfigured && authUser && profileState === "username") {
+    return (
+      <main className="onboarding-screen">
+        <div className="onboarding-card">
+          <Brand />
+          <p className="eyebrow">ONE LAST STEP BEFORE THE TRAIL</p>
+          <h1>What should we call you?</h1>
+          <p className="account-copy">Choose your explorer name. You can change it later in your player settings.</p>
+          <form className="username-form" onSubmit={(event) => void saveUsername(event)}>
+            <label htmlFor="explorer-username">Explorer name</label>
+            <input id="explorer-username" type="text" autoComplete="nickname" autoFocus maxLength={18} value={usernameInput} onChange={(event) => setUsernameInput(event.target.value)} placeholder="Your name" required />
+            <small>1–18 characters</small>
+            <button className="account-primary" type="submit" disabled={usernameBusy}>{usernameBusy ? "SAVING YOUR PROFILE…" : "ENTER THE FOREST ↗"}</button>
+          </form>
+          {usernameMessage && <p className="account-message" role="alert">{usernameMessage}</p>}
+        </div>
+      </main>
+    );
+  }
+
+  if (showIntro || (isSupabaseConfigured && !authUser)) {
     return (
       <main className="intro-screen">
         <div className="intro-world" aria-hidden="true">
@@ -965,6 +1104,7 @@ export default function Home() {
         <Image className="intro-guide-portrait" src="/trail-coach.svg" alt="Kabir, an original fictional forest expedition guide in cricket gear" width={360} height={500} priority />
         <div className="intro-bottom"><span>CANOPY CROSSING <i>—</i> TRAILHEAD 001</span><span>NO SHORTCUTS IN THE WILD.</span></div>
         <div className="intro-scroll"><span>ENTER THE FOREST</span><i /></div>
+        {renderAccountDialog()}
       </main>
     );
   }
@@ -998,36 +1138,7 @@ export default function Home() {
         <div className="page-content">{renderMainView()}<footer className="page-footer"><Brand compact /><span>TAKE NOTHING BUT KNOWLEDGE. LEAVE NOTHING BUT FOOTPRINTS.</span><button onClick={() => { if (window.confirm("Reset this device’s saved game progress? This cannot be undone.")) { setPlayer(initialPlayer); setBanner(""); } }}>RESET DEMO</button></footer></div>
       </main>
       {toast && <div className="toast-message" role="status"><span>✦</span>{toast}</div>}
-      {authOpen && (
-        <div className="account-backdrop" role="presentation" onClick={(event) => {
-          if (event.target === event.currentTarget) setAuthOpen(false);
-        }}>
-          <section className="account-dialog" role="dialog" aria-modal="true" aria-labelledby="account-title">
-            <button className="account-close" aria-label="Close account dialog" onClick={() => setAuthOpen(false)}>×</button>
-            <p className="eyebrow">YOUR PROGRESS, EVERYWHERE</p>
-            <h2 id="account-title">{authUser ? "Explorer account" : "Join the expedition."}</h2>
-            {authUser ? (
-              <>
-                <p className="account-copy">Signed in as <strong>{authUser.email ?? "Google account"}</strong>. Your progress syncs to your account when Supabase is configured.</p>
-                <button className="account-primary" onClick={signOut}>SIGN OUT</button>
-              </>
-            ) : (
-              <>
-                <p className="account-copy">Sign in to sync your trail progress and appear on the global leaderboard.</p>
-                <button className="google-signin" onClick={signInWithGoogle} disabled={authBusy}><span aria-hidden="true">G</span>{authBusy ? "CONNECTING…" : "CONTINUE WITH GOOGLE"}</button>
-                <div className="account-divider"><span>OR USE EMAIL</span></div>
-                <form className="email-signin" onSubmit={(event) => { event.preventDefault(); void sendEmailSignIn(); }}>
-                  <label htmlFor="account-email">Email address</label>
-                  <input id="account-email" type="email" autoComplete="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} placeholder="you@example.com" required />
-                  <button className="account-primary" type="submit" disabled={authBusy}>{authBusy ? "SENDING LINK…" : "EMAIL ME A SIGN-IN LINK"}</button>
-                </form>
-                {!isSupabaseConfigured && <p className="account-setup-note">Account sign-in will be ready after the Supabase project is connected.</p>}
-              </>
-            )}
-            {authMessage && <p className="account-message" role="status">{authMessage}</p>}
-          </section>
-        </div>
-      )}
+      {renderAccountDialog()}
       {rewardCelebration && (
         <div className="reward-cinematic" role="dialog" aria-modal="true" aria-label="Daily reward collected">
           <div className="reward-rays" aria-hidden="true" />
@@ -1098,9 +1209,10 @@ export default function Home() {
               <>
                 <p className="eyebrow challenge-eyebrow">{currentChallenge.topic.replace(/LEVEL \d+/, `LEVEL ${activeChallengeLevel}`)}</p>
                 <h2 id="challenge-title">{currentChallenge.title}</h2>
-                <div className={`coach-brief${coachSpeaking ? " coach-speaking" : ""}`}>
+                <div className={`coach-brief${coachSpeaking ? " coach-speaking" : ""}${briefingExpanded ? " coach-brief-expanded" : ""}`}>
                   <Image src="/trail-coach.svg" alt="" width={72} height={100} />
                   <div><span>FIELD CAPTAIN · KABIR <small>FICTIONAL GUIDE</small></span><p>{coachLine}</p></div>
+                  <button className="briefing-toggle" onClick={() => setBriefingExpanded((expanded) => !expanded)} aria-expanded={briefingExpanded}>{briefingExpanded ? "LESS" : "BRIEF"}</button>
                   <button className="coach-speak-button" onClick={speakCoachBrief} aria-label="Hear Kabir read the mission" aria-pressed={coachSpeaking}>{coachSpeaking ? "▣" : "🔊"}</button>
                 </div>
                 <div className="code-window">
