@@ -11,7 +11,7 @@
 [![Supabase](https://img.shields.io/badge/Supabase-auth%20%26%20profiles-3ecf8e?logo=supabase&logoColor=white)](https://supabase.com/)
 
 <p align="center">
-  <img src="public/canopy-trail.svg" alt="Original Code Escape Master forest trail artwork: a winding path through the canopy toward a waterfall and a distant temple" width="100%">
+  <img src="docs/screenshots/landing.jpg" alt="Code Escape Master running in a desktop browser: the forest-trail intro, original artwork, and Start Your Adventure button" width="100%">
 </p>
 
 ## The idea
@@ -28,6 +28,63 @@ The experience is designed around three principles:
   <img src="public/canopy-explorer.svg" alt="Original illustrated forest explorer character wearing expedition gear" width="210">
   &nbsp;&nbsp;&nbsp;
   <img src="public/trail-coach.svg" alt="Original illustration of Kabir, the fictional field captain who briefs players" width="150">
+</p>
+
+## Inside the game
+
+These are screenshots of the **running application**, captured from a clean local demo profile at desktop and phone-sized viewports. The leaderboard is explicitly in sample-preview mode; no account or player data is shown.
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/trail-camp.jpg" alt="Trail Camp dashboard showing the next expedition, hearts, coins, XP, trail markers, and daily bonus" width="100%">
+      <p align="center"><strong>Trail Camp</strong> — campaign progress, XP, coins, hearts, and daily rewards.</p>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/world-map.jpg" alt="World map showing all five campaign regions and their level ranges" width="100%">
+      <p align="center"><strong>The world map</strong> — five regions across the 100-level trail.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/challenge.jpg" alt="JavaScript challenge with Kabir's briefing, code snippet, four answers, and Run Your Solution button" width="100%">
+      <p align="center"><strong>A coding challenge</strong> — read the code, choose the missing line, and run your answer.</p>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/daily-reward.jpg" alt="Daily reward celebration showing 50 coins and 25 XP" width="100%">
+      <p align="center"><strong>Daily reward</strong> — a forest gift of 50 coins and 25 XP.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/leaderboard.jpg" alt="Leaderboard sample preview with explorer ranks and XP totals" width="100%">
+      <p align="center"><strong>Leaderboard</strong> — a sample preview locally; live profile rankings require Supabase.</p>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/achievements.jpg" alt="Achievement cards for campaign, coin, and streak milestones" width="100%">
+      <p align="center"><strong>Achievements</strong> — milestones for learning, returning, and exploring farther.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/trail-gear.jpg" alt="Trail gear shop with four explorer avatars and their coin prices" width="100%">
+      <p align="center"><strong>Trail gear</strong> — unlock an explorer look with earned coins.</p>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/hall-of-fame.jpg" alt="Locked Hall of Fame page showing progress toward completing 100 trail levels" width="100%">
+      <p align="center"><strong>Hall of Fame</strong> — complete all 100 campaign levels to earn the finisher entry.</p>
+    </td>
+  </tr>
+</table>
+
+### Made for a phone, too
+
+<p align="center">
+  <img src="docs/screenshots/landing-mobile.jpg" alt="Mobile view of the Code Escape Master forest-trail landing screen" width="31%">
+  &nbsp;
+  <img src="docs/screenshots/trail-camp-mobile.jpg" alt="Mobile Trail Camp dashboard with campaign and XP cards arranged for a narrow screen" width="31%">
+  &nbsp;
+  <img src="docs/screenshots/challenge-mobile.jpg" alt="Mobile coding challenge with a compact briefing, visible answers, and submit button" width="31%">
 </p>
 
 ## Play the game
@@ -175,6 +232,8 @@ public/
   canopy-trail.svg    Original forest-world illustration
   canopy-explorer.svg Original explorer character
   trail-coach.svg     Original field captain illustration
+docs/screenshots/
+  *.jpg               Real desktop and phone-sized app screenshots
 supabase/
   schema.sql          Profiles table, RLS policies, leaderboard view
 ```
