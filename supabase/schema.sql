@@ -15,24 +15,46 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
-drop policy if exists "Players can read their own profile" on public.profiles;
-create policy "Players can read their own profile"
-  on public.profiles for select
-  to authenticated
-  using ((select auth.uid()) = id);
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'profiles'
+      and policyname = 'Players can read their own profile'
+  ) then
+    create policy "Players can read their own profile"
+      on public.profiles for select
+      to authenticated
+      using ((select auth.uid()) = id);
+  end if;
 
-drop policy if exists "Players can create their own profile" on public.profiles;
-create policy "Players can create their own profile"
-  on public.profiles for insert
-  to authenticated
-  with check ((select auth.uid()) = id);
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'profiles'
+      and policyname = 'Players can create their own profile'
+  ) then
+    create policy "Players can create their own profile"
+      on public.profiles for insert
+      to authenticated
+      with check ((select auth.uid()) = id);
+  end if;
 
-drop policy if exists "Players can update their own profile" on public.profiles;
-create policy "Players can update their own profile"
-  on public.profiles for update
-  to authenticated
-  using ((select auth.uid()) = id)
-  with check ((select auth.uid()) = id);
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'profiles'
+      and policyname = 'Players can update their own profile'
+  ) then
+    create policy "Players can update their own profile"
+      on public.profiles for update
+      to authenticated
+      using ((select auth.uid()) = id)
+      with check ((select auth.uid()) = id);
+  end if;
+end;
+$$;
 
 create or replace function public.touch_profile_updated_at()
 returns trigger
@@ -45,10 +67,20 @@ begin
 end;
 $$;
 
-drop trigger if exists profiles_updated_at on public.profiles;
-create trigger profiles_updated_at
-  before update on public.profiles
-  for each row execute function public.touch_profile_updated_at();
+do $$
+begin
+  if not exists (
+    select 1 from pg_trigger
+    where tgname = 'profiles_updated_at'
+      and tgrelid = 'public.profiles'::regclass
+      and not tgisinternal
+  ) then
+    create trigger profiles_updated_at
+      before update on public.profiles
+      for each row execute function public.touch_profile_updated_at();
+  end if;
+end;
+$$;
 
 create or replace view public.leaderboard as
   select username, avatar, xp, completed, updated_at
